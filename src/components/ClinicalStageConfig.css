@@ -341,7 +341,11 @@
   color: #333;
   background-color: white;
   cursor: pointer;
-  min-width: 120px;
+  width: 240px;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .carry-forward-select:focus {
