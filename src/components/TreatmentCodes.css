@@ -1,0 +1,342 @@
+.treatment-codes-section {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.treatment-codes-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.treatment-codes-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.treatment-codes-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1a1a1a;
+  margin: 0;
+  line-height: 24px;
+}
+
+.treatment-codes-info-icon {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: help;
+  color: #808080;
+  flex-shrink: 0;
+}
+
+.treatment-codes-info-icon .material-symbols-outlined {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
+.treatment-codes-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  background-color: #1a1a1a;
+  color: white;
+  font-size: 12px;
+  font-weight: normal;
+  white-space: normal;
+  width: 180px;
+  border-radius: 6px;
+  pointer-events: none;
+  z-index: 1000;
+  line-height: 1.4;
+}
+
+.treatment-codes-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: #1a1a1a;
+}
+
+.treatment-codes-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.treatment-codes-clear-btn {
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #1132EE;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.2s;
+  white-space: nowrap;
+}
+
+.treatment-codes-clear-btn:hover {
+  color: #3D5DFF;
+  text-decoration: underline;
+}
+
+.treatment-codes-add-btn {
+  padding: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #1a1a1a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50px;
+  transition: background-color 0.2s;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.treatment-codes-add-btn .material-symbols-outlined {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+.treatment-codes-add-btn:hover {
+  background-color: #f5f5f5;
+}
+
+.treatment-codes-container {
+  background-color: #f7f7f7;
+  border-radius: 8px;
+  min-height: 36px;
+  padding: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.treatment-codes-container.has-chips {
+  background-color: transparent;
+  padding: 0;
+}
+
+.treatment-codes-empty {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 20px;
+}
+
+.treatment-codes-empty-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: #808080;
+  margin: 0;
+  text-align: center;
+}
+
+.treatment-codes-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+}
+
+.treatment-code-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background-color: #f2f2f2;
+  border: none;
+  border-radius: 8px;
+  height: 28px;
+  font-size: 14px;
+  color: #1a1a1a;
+  box-sizing: border-box;
+}
+
+.treatment-code-chip-text {
+  font-weight: 500;
+}
+
+.treatment-code-chip-remove {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: #666;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.treatment-code-chip-remove .material-symbols-outlined {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
+.treatment-code-chip-remove:hover {
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+.treatment-codes-flyout {
+  position: fixed;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  box-shadow: 0px 4px 10px 0px rgba(0, 0, 0, 0.12), 0px 2px 20px 1px rgba(0, 0, 0, 0.1);
+  min-width: 320px;
+  max-width: 400px;
+  max-height: 400px;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.treatment-codes-flyout-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.treatment-codes-flyout-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.treatment-codes-flyout-close {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: #666;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+  width: 24px;
+  height: 24px;
+}
+
+.treatment-codes-flyout-close .material-symbols-outlined {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
+.treatment-codes-flyout-close:hover {
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+.treatment-codes-flyout-search {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.treatment-codes-flyout-search-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #333;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.treatment-codes-flyout-search-input:focus {
+  border-color: #1132EE;
+}
+
+.treatment-codes-flyout-list {
+  overflow-y: auto;
+  max-height: 280px;
+  padding: 4px 0;
+}
+
+.treatment-codes-flyout-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.treatment-codes-flyout-item:hover {
+  background-color: #f5f5f5;
+}
+
+.treatment-codes-flyout-item.selected {
+  background-color: #E8EDFF;
+}
+
+.treatment-codes-flyout-checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #1132EE;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.treatment-codes-flyout-item-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.treatment-codes-flyout-code {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.treatment-codes-flyout-description {
+  font-size: 12px;
+  color: #666;
+  line-height: 1.4;
+}
+
+.treatment-codes-flyout-empty {
+  padding: 20px;
+  text-align: center;
+  font-size: 14px;
+  color: #999;
+}

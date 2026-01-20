@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import './ClinicalStageConfig.css'
 import ColorPicker, { lightenColor, darkenColor } from './ColorPicker'
 import SectionSelector, { getCategoryForSection } from './SectionSelector'
+import TreatmentCodes from './TreatmentCodes'
 
 export const stageContent = {
   'Initial Evaluation': {
@@ -648,6 +649,8 @@ function ClinicalStageConfig({ selectedStage, clinicalStages, onStageColorChange
           )}
         </div>
       </div>
+
+      <TreatmentCodes />
     </div>
   )
 }
