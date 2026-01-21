@@ -113,39 +113,46 @@ function TreatmentCodes() {
 
   return (
     <div className="treatment-codes-section">
-      <div className="treatment-codes-header">
-        <div className="treatment-codes-title-wrapper">
-          <h3 className="treatment-codes-title">Pre-loaded Treatment Codes</h3>
-          <div
-            className="treatment-codes-info-icon"
-            onMouseEnter={() => setShowTooltip(true)}
-            onMouseLeave={() => setShowTooltip(false)}
-            ref={tooltipRef}
-          >
-            <span className="material-symbols-outlined">info</span>
-            {showTooltip && (
-              <div className="treatment-codes-tooltip">
-                Pre-loading treatment codes will automatically be populated in your visit notes when they opened for the first time
+      <div className="config-section">
+        <div className="treatment-codes-header-section">
+          <div style={{ flex: 1 }}>
+            <div className="treatment-codes-title-wrapper">
+              <label className="config-label">Pre-loaded Treatment Codes</label>
+              <div
+                className="treatment-codes-info-icon"
+                onMouseEnter={() => setShowTooltip(true)}
+                onMouseLeave={() => setShowTooltip(false)}
+                ref={tooltipRef}
+              >
+                <span className="material-symbols-outlined">info</span>
+                {showTooltip && (
+                  <div className="treatment-codes-tooltip">
+                    Pre-loading treatment codes will automatically be populated in your visit notes when they opened for the first time
+                  </div>
+                )}
               </div>
-            )}
+            </div>
+            <p className="config-description">
+              Select treatment codes to pre-populate on your visit note.
+            </p>
           </div>
-        </div>
-        <div className="treatment-codes-header-actions">
-          {selectedCodes.length > 0 && (
+          <div className="treatment-codes-header-actions">
             <button
-              className="treatment-codes-clear-btn"
+              className="clear-btn"
               onClick={() => setSelectedCodes([])}
+              disabled={selectedCodes.length === 0}
             >
               Clear
             </button>
-          )}
-          <button
-            ref={addButtonRef}
-            className="treatment-codes-add-btn"
-            onClick={() => setShowFlyout(!showFlyout)}
-          >
-            <span className="material-symbols-outlined">add</span>
-          </button>
+            <button
+              ref={addButtonRef}
+              className="add-section-btn-top"
+              onClick={() => setShowFlyout(!showFlyout)}
+            >
+              <span className="material-symbols-outlined">add</span>
+              <span>Add Codes</span>
+            </button>
+          </div>
         </div>
       </div>
 

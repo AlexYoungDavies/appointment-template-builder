@@ -402,6 +402,12 @@ function ClinicalStageConfig({ selectedStage, clinicalStages, onStageColorChange
     <div className="clinical-stage-config">
       <div className="config-section">
         <div className="color-section">
+          <div style={{ flex: 1 }}>
+            <label className="config-label">Calendar Block Color</label>
+            <p className="config-description">
+              Select a color to represent {selectedStage}s of this template.
+            </p>
+          </div>
           <div style={{ position: 'relative' }}>
             <div 
               ref={colorIconRef}
@@ -429,53 +435,60 @@ function ClinicalStageConfig({ selectedStage, clinicalStages, onStageColorChange
               position="below"
             />
           </div>
-          <div style={{ flex: 1 }}>
-            <label className="config-label">Calendar Block Color</label>
-            <p className="config-description">
-              Select a color to represent {selectedStage}s of this template.
-            </p>
-          </div>
-          <div style={{ position: 'relative', display: 'flex', gap: '8px', alignItems: 'center' }}>
-            <button
-              className="clear-btn"
-              onClick={handleClearAll}
-            >
-              Clear
-            </button>
-            <button
-              ref={addSectionTopBtnRef}
-              className="add-section-btn-top"
-              onClick={() => {
-                if (showSectionSelector && sectionSelectorTrigger === 'top') {
-                  setShowSectionSelector(false)
-                  setSectionSelectorTrigger(null)
-                } else {
-                  setShowSectionSelector(true)
-                  setSectionSelectorTrigger('top')
-                }
-              }}
-            >
-              <span className="material-symbols-outlined">add</span>
-              <span>Add Section</span>
-            </button>
-            {showSectionSelector && sectionSelectorTrigger === 'top' && (
-              <SectionSelector
-                isOpen={showSectionSelector}
-                onClose={() => {
-                  setShowSectionSelector(false)
-                  setSectionSelectorTrigger(null)
-                }}
-                triggerRef={addSectionTopBtnRef}
-                position="below"
-                selectedSections={Array.from(selectedSectionNames)}
-                onSelectionChange={handleSelectionChange}
-              />
-            )}
-          </div>
         </div>
       </div>
 
-      <div className="config-table-wrapper" draggable="false">
+      <div className="note-content-container">
+        <div className="config-section">
+          <div className="note-content-section">
+            <div style={{ flex: 1 }}>
+              <label className="config-label">{selectedStage} Note Content</label>
+              <p className="config-description">
+                Configure what content you want to see on this template view.
+              </p>
+            </div>
+            <div style={{ position: 'relative', display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <button
+                className="clear-btn"
+                onClick={handleClearAll}
+                disabled={Object.keys(orderedSections).length === 0}
+              >
+                Clear
+              </button>
+              <button
+                ref={addSectionTopBtnRef}
+                className="add-section-btn-top"
+                onClick={() => {
+                  if (showSectionSelector && sectionSelectorTrigger === 'top') {
+                    setShowSectionSelector(false)
+                    setSectionSelectorTrigger(null)
+                  } else {
+                    setShowSectionSelector(true)
+                    setSectionSelectorTrigger('top')
+                  }
+                }}
+              >
+                <span className="material-symbols-outlined">add</span>
+                <span>Add Section</span>
+              </button>
+              {showSectionSelector && sectionSelectorTrigger === 'top' && (
+                <SectionSelector
+                  isOpen={showSectionSelector}
+                  onClose={() => {
+                    setShowSectionSelector(false)
+                    setSectionSelectorTrigger(null)
+                  }}
+                  triggerRef={addSectionTopBtnRef}
+                  position="below"
+                  selectedSections={Array.from(selectedSectionNames)}
+                  onSelectionChange={handleSelectionChange}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="config-table-wrapper" draggable="false">
         <table className="config-table" draggable="false">
           <thead>
             <tr>
@@ -648,6 +661,7 @@ function ClinicalStageConfig({ selectedStage, clinicalStages, onStageColorChange
             />
           )}
         </div>
+      </div>
       </div>
 
       <TreatmentCodes />
