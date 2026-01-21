@@ -1,10 +1,17 @@
-.clinical-stage-config {
+.clinical-stage-config-wrapper {
   flex: 1;
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+  border-left: 1px solid rgba(232, 232, 232, 1);
+}
+
+.clinical-stage-config {
+  width: 100%;
+  max-width: 900px;
   padding: 16px 24px;
   overflow-y: auto;
-  min-width: 0;
   border: none;
-  border-left: 1px solid rgba(232, 232, 232, 1);
   border-radius: 0px;
   display: flex;
   flex-direction: column;

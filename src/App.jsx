@@ -72,14 +72,16 @@ function App() {
                 onStageColorChange={handleStageColorChange}
                 stageSectionCounts={stageSectionCounts}
               />
-              <ClinicalStageConfig 
-                selectedStage={selectedStage}
-                clinicalStages={clinicalStages}
-                onStageColorChange={handleStageColorChange}
-                onSectionCountChange={handleSectionCountChange}
-                onSectionsDataChange={handleSectionsDataChange}
-                stageSectionsData={stageSectionsData}
-              />
+              <div className="clinical-stage-config-wrapper">
+                <ClinicalStageConfig 
+                  selectedStage={selectedStage}
+                  clinicalStages={clinicalStages}
+                  onStageColorChange={handleStageColorChange}
+                  onSectionCountChange={handleSectionCountChange}
+                  onSectionsDataChange={handleSectionsDataChange}
+                  stageSectionsData={stageSectionsData}
+                />
+              </div>
             </div>
           </div>
         </div>
