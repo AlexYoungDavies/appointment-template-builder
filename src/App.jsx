@@ -6,13 +6,14 @@ import TemplateForm from './components/TemplateForm'
 import ClinicalStageConfig from './components/ClinicalStageConfig'
 
 function App() {
-  const [selectedStage, setSelectedStage] = useState('Initial Evaluation')
+  const [selectedStage, setSelectedStage] = useState('Pre-op')
   const [clinicalStages, setClinicalStages] = useState([
-    { id: 'initial-evaluation', name: 'Initial Evaluation', enabled: true, selected: true, color: '#7044bb' },
-    { id: 'daily-note', name: 'Daily Note', enabled: true, selected: false, color: '#7044bb' },
-    { id: 'progress-note', name: 'Progress Note', enabled: true, selected: false, color: '#7044bb' },
-    { id: 'discharge-note', name: 'Discharge Note', enabled: false, selected: false, color: '#7044bb' },
-    { id: 'recertification', name: 'Re-certification', enabled: true, selected: false, color: '#7044bb' },
+    { id: 'pre-op', name: 'Pre-op', enabled: true, selected: true, color: '#7044bb' },
+    { id: 'operation', name: 'Operation', enabled: true, selected: false, color: '#7044bb' },
+    { id: 'post-op', name: 'Post-op', enabled: true, selected: false, color: '#7044bb' },
+    { id: '2-week-follow-up', name: '2 Week Follow-up', enabled: true, selected: false, color: '#7044bb' },
+    { id: '4-week-follow-up', name: '4 Week Follow-up', enabled: true, selected: false, color: '#7044bb' },
+    { id: '6-week-follow-up', name: '6 Week Follow-up', enabled: true, selected: false, color: '#7044bb' },
   ])
   const [stageSectionCounts, setStageSectionCounts] = useState({})
   const [stageSectionsData, setStageSectionsData] = useState({})

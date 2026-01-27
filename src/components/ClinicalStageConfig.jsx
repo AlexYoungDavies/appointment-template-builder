@@ -5,7 +5,7 @@ import SectionSelector, { getCategoryForSection } from './SectionSelector'
 import TreatmentCodes from './TreatmentCodes'
 
 export const stageContent = {
-  'Initial Evaluation': {
+  'Pre-op': {
     sections: [
       { id: 'subj-1', category: 'Subjective', name: 'Chief Complaint', type: 'Custom', scribe: true, carryForward: 'Select' },
       { id: 'subj-2', category: 'Subjective', name: 'Social History', type: 'Default', scribe: true, carryForward: 'Select' },
@@ -19,36 +19,49 @@ export const stageContent = {
       { id: 'plan-2', category: 'Plan', name: 'Plan of Care', type: 'Default', scribe: true, carryForward: 'Select' },
     ]
   },
-  'Daily Note': {
+  'Operation': {
     sections: [
-      { id: 'subj-1', category: 'Subjective', name: 'Daily Subjective', type: 'Default', scribe: true, carryForward: 'None' },
+      { id: 'subj-1', category: 'Subjective', name: 'Pre-operative Assessment', type: 'Default', scribe: true, carryForward: 'None' },
       { id: 'obj-1', category: 'Objective', name: 'Vital Signs', type: 'Default', scribe: true, carryForward: 'None' },
-      { id: 'assess-1', category: 'Assessment', name: 'Daily Assessment', type: 'Default', scribe: true, carryForward: 'None' },
-      { id: 'plan-1', category: 'Plan', name: 'Daily Plan', type: 'Default', scribe: true, carryForward: 'None' },
+      { id: 'obj-2', category: 'Objective', name: 'Operative Findings', type: 'Default', scribe: true, carryForward: 'None' },
+      { id: 'assess-1', category: 'Assessment', name: 'Operative Assessment', type: 'Default', scribe: true, carryForward: 'None' },
+      { id: 'plan-1', category: 'Plan', name: 'Post-operative Plan', type: 'Default', scribe: true, carryForward: 'None' },
     ]
   },
-  'Progress Note': {
+  'Post-op': {
     sections: [
-      { id: 'subj-1', category: 'Subjective', name: 'Progress Subjective', type: 'Default', scribe: true, carryForward: 'None' },
-      { id: 'obj-1', category: 'Objective', name: 'Progress Objective', type: 'Default', scribe: true, carryForward: 'None' },
-      { id: 'assess-1', category: 'Assessment', name: 'Progress Assessment', type: 'Default', scribe: true, carryForward: 'None' },
-      { id: 'plan-1', category: 'Plan', name: 'Progress Plan', type: 'Default', scribe: true, carryForward: 'None' },
+      { id: 'subj-1', category: 'Subjective', name: 'Post-operative Subjective', type: 'Default', scribe: true, carryForward: 'None' },
+      { id: 'obj-1', category: 'Objective', name: 'Vital Signs', type: 'Default', scribe: true, carryForward: 'None' },
+      { id: 'obj-2', category: 'Objective', name: 'Post-operative Measurements', type: 'Default', scribe: true, carryForward: 'None' },
+      { id: 'assess-1', category: 'Assessment', name: 'Post-operative Assessment', type: 'Default', scribe: true, carryForward: 'None' },
+      { id: 'plan-1', category: 'Plan', name: 'Post-operative Plan', type: 'Default', scribe: true, carryForward: 'None' },
     ]
   },
-  'Discharge Note': {
+  '2 Week Follow-up': {
     sections: [
-      { id: 'subj-1', category: 'Subjective', name: 'Discharge Summary', type: 'Default', scribe: true, carryForward: 'None' },
-      { id: 'obj-1', category: 'Objective', name: 'Final Measurements', type: 'Default', scribe: true, carryForward: 'None' },
-      { id: 'assess-1', category: 'Assessment', name: 'Discharge Assessment', type: 'Default', scribe: true, carryForward: 'None' },
-      { id: 'plan-1', category: 'Plan', name: 'Discharge Plan', type: 'Default', scribe: true, carryForward: 'None' },
+      { id: 'subj-1', category: 'Subjective', name: 'Follow-up Subjective', type: 'Default', scribe: true, carryForward: 'None' },
+      { id: 'obj-1', category: 'Objective', name: 'Measurements', type: 'Default', scribe: true, carryForward: 'None' },
+      { id: 'obj-2', category: 'Objective', name: 'Functional Assessment Tool Scores', type: 'Custom', scribe: true, carryForward: 'None' },
+      { id: 'assess-1', category: 'Assessment', name: 'Follow-up Assessment', type: 'Default', scribe: true, carryForward: 'None' },
+      { id: 'plan-1', category: 'Plan', name: 'Follow-up Plan', type: 'Default', scribe: true, carryForward: 'None' },
     ]
   },
-  'Re-certification': {
+  '4 Week Follow-up': {
     sections: [
-      { id: 'subj-1', category: 'Subjective', name: 'Re-certification Subjective', type: 'Default', scribe: true, carryForward: 'None' },
-      { id: 'obj-1', category: 'Objective', name: 'Re-certification Objective', type: 'Default', scribe: true, carryForward: 'None' },
-      { id: 'assess-1', category: 'Assessment', name: 'Re-certification Assessment', type: 'Default', scribe: true, carryForward: 'None' },
-      { id: 'plan-1', category: 'Plan', name: 'Re-certification Plan', type: 'Default', scribe: true, carryForward: 'None' },
+      { id: 'subj-1', category: 'Subjective', name: 'Follow-up Subjective', type: 'Default', scribe: true, carryForward: 'None' },
+      { id: 'obj-1', category: 'Objective', name: 'Measurements', type: 'Default', scribe: true, carryForward: 'None' },
+      { id: 'obj-2', category: 'Objective', name: 'Functional Assessment Tool Scores', type: 'Custom', scribe: true, carryForward: 'None' },
+      { id: 'assess-1', category: 'Assessment', name: 'Follow-up Assessment', type: 'Default', scribe: true, carryForward: 'None' },
+      { id: 'plan-1', category: 'Plan', name: 'Follow-up Plan', type: 'Default', scribe: true, carryForward: 'None' },
+    ]
+  },
+  '6 Week Follow-up': {
+    sections: [
+      { id: 'subj-1', category: 'Subjective', name: 'Follow-up Subjective', type: 'Default', scribe: true, carryForward: 'None' },
+      { id: 'obj-1', category: 'Objective', name: 'Measurements', type: 'Default', scribe: true, carryForward: 'None' },
+      { id: 'obj-2', category: 'Objective', name: 'Functional Assessment Tool Scores', type: 'Custom', scribe: true, carryForward: 'None' },
+      { id: 'assess-1', category: 'Assessment', name: 'Follow-up Assessment', type: 'Default', scribe: true, carryForward: 'None' },
+      { id: 'plan-1', category: 'Plan', name: 'Follow-up Plan', type: 'Default', scribe: true, carryForward: 'None' },
     ]
   },
 }
@@ -497,7 +510,7 @@ function ClinicalStageConfig({ selectedStage, clinicalStages, onStageColorChange
               </th>
               <th>Type</th>
               <th>Scribe?</th>
-              {selectedStage !== 'Initial Evaluation' && <th>Carry Forward Behavior</th>}
+              {selectedStage !== 'Pre-op' && <th>Carry Forward Behavior</th>}
               <th></th>
             </tr>
           </thead>
@@ -514,7 +527,7 @@ function ClinicalStageConfig({ selectedStage, clinicalStages, onStageColorChange
               .map(([category, sections]) => (
               <React.Fragment key={category}>
                 <tr className="category-row">
-                  <td colSpan={selectedStage !== 'Initial Evaluation' ? 5 : 4} className="category-header">{category}</td>
+                  <td colSpan={selectedStage !== 'Pre-op' ? 5 : 4} className="category-header">{category}</td>
                 </tr>
                 {sections.map((section, index) => {
                   const showIndicatorAbove = dropIndicator?.sectionId === section.id && 
@@ -528,7 +541,7 @@ function ClinicalStageConfig({ selectedStage, clinicalStages, onStageColorChange
                     <React.Fragment key={section.id}>
                       {showIndicatorAbove && (
                         <tr className="drop-indicator-row">
-                          <td colSpan={selectedStage !== 'Initial Evaluation' ? 5 : 4} className="drop-indicator"></td>
+                          <td colSpan={selectedStage !== 'Pre-op' ? 5 : 4} className="drop-indicator"></td>
                         </tr>
                       )}
                       <tr
@@ -551,7 +564,7 @@ function ClinicalStageConfig({ selectedStage, clinicalStages, onStageColorChange
                             <span className="toggle-slider"></span>
                           </button>
                         </td>
-                        {selectedStage !== 'Initial Evaluation' && (
+                        {selectedStage !== 'Pre-op' && (
                           <td>
                             <select 
                               className="carry-forward-select" 
@@ -578,7 +591,7 @@ function ClinicalStageConfig({ selectedStage, clinicalStages, onStageColorChange
                       </tr>
                       {showIndicatorBelow && (
                         <tr className="drop-indicator-row">
-                          <td colSpan={selectedStage !== 'Initial Evaluation' ? 5 : 4} className="drop-indicator"></td>
+                          <td colSpan={selectedStage !== 'Pre-op' ? 5 : 4} className="drop-indicator"></td>
                         </tr>
                       )}
                     </React.Fragment>
