@@ -274,6 +274,16 @@ function ClinicalStageConfig({ selectedStage, clinicalStages, onStageColorChange
     setSectionVisibility(newVisibility)
   }
 
+  // Handle scribe toggle
+  const handleScribeToggle = (sectionId, category) => {
+    const newOrdered = { ...orderedSections }
+    const categorySections = newOrdered[category].map(s => 
+      s.id === sectionId ? { ...s, scribe: !s.scribe } : s
+    )
+    newOrdered[category] = categorySections
+    setOrderedSections(newOrdered)
+  }
+
   // Handle carry forward change
   const handleCarryForwardChange = (sectionId, category, newValue) => {
     const newOrdered = { ...orderedSections }
@@ -560,7 +570,10 @@ function ClinicalStageConfig({ selectedStage, clinicalStages, onStageColorChange
                         </td>
                         <td>{section.type}</td>
                         <td>
-                          <button className={`toggle-switch small ${section.scribe ? 'on' : 'off'}`}>
+                          <button 
+                            className={`toggle-switch small ${section.scribe ? 'on' : 'off'}`}
+                            onClick={() => handleScribeToggle(section.id, category)}
+                          >
                             <span className="toggle-slider"></span>
                           </button>
                         </td>
