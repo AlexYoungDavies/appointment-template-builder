@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import './App.css'
 import Sidebar from './components/Sidebar'
 import Header from './components/Header'
@@ -17,6 +17,9 @@ function App() {
   ])
   const [stageSectionCounts, setStageSectionCounts] = useState({})
   const [stageSectionsData, setStageSectionsData] = useState({})
+  const [leftColumnWidth, setLeftColumnWidth] = useState(380)
+  const [isResizing, setIsResizing] = useState(false)
+  const contentCardRef = useRef(null)
 
   const handleStageToggle = (stageId) => {
     setClinicalStages(stages =>
@@ -58,6 +61,45 @@ function App() {
     }))
   }
 
+  const handleMouseDown = (e) => {
+    e.preventDefault()
+    setIsResizing(true)
+  }
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (!isResizing || !contentCardRef.current) return
+
+      const contentCardRect = contentCardRef.current.getBoundingClientRect()
+      const newLeftWidth = e.clientX - contentCardRect.left
+      const minLeftWidth = 380
+      const minRightWidth = 700
+      const maxLeftWidth = contentCardRect.width - minRightWidth
+
+      if (newLeftWidth >= minLeftWidth && newLeftWidth <= maxLeftWidth) {
+        setLeftColumnWidth(newLeftWidth)
+      }
+    }
+
+    const handleMouseUp = () => {
+      setIsResizing(false)
+    }
+
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove)
+      document.addEventListener('mouseup', handleMouseUp)
+      document.body.style.cursor = 'col-resize'
+      document.body.style.userSelect = 'none'
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+    }
+  }, [isResizing])
+
   return (
     <div className="app">
       <Sidebar />
@@ -65,15 +107,24 @@ function App() {
         <div className="content-container">
           <Header />
           <div className="content-wrapper">
-            <div className="content-card">
+            <div className="content-card" ref={contentCardRef}>
               <TemplateForm
                 clinicalStages={clinicalStages}
                 onStageToggle={handleStageToggle}
                 onStageSelect={handleStageSelect}
                 onStageColorChange={handleStageColorChange}
                 stageSectionCounts={stageSectionCounts}
+                style={{ width: `${leftColumnWidth}px`, minWidth: '380px' }}
               />
-              <div className="clinical-stage-config-wrapper">
+              <div 
+                className="resizer"
+                onMouseDown={handleMouseDown}
+                style={{ cursor: 'col-resize' }}
+              />
+              <div 
+                className="clinical-stage-config-wrapper"
+                style={{ minWidth: '700px' }}
+              >
                 <ClinicalStageConfig 
                   selectedStage={selectedStage}
                   clinicalStages={clinicalStages}

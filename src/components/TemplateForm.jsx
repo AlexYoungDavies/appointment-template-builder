@@ -2,14 +2,14 @@ import { useState, useRef } from 'react'
 import './TemplateForm.css'
 import ColorPicker, { lightenColor, darkenColor } from './ColorPicker'
 
-function TemplateForm({ clinicalStages, onStageToggle, onStageSelect, onStageColorChange, stageSectionCounts }) {
+function TemplateForm({ clinicalStages, onStageToggle, onStageSelect, onStageColorChange, stageSectionCounts, style }) {
   const [templateName, setTemplateName] = useState('')
   const [defaultDuration, setDefaultDuration] = useState('')
   const [showColorPickerForStage, setShowColorPickerForStage] = useState(null)
   const colorPreviewRefs = useRef({})
 
   return (
-    <div className="template-form">
+    <div className="template-form" style={style}>
       <h1 className="page-title">Create Appointment Template</h1>
       
       <div className="form-section">
