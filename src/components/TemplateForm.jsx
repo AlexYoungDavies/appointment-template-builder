@@ -2,8 +2,7 @@ import { useState, useRef } from 'react'
 import './TemplateForm.css'
 import ColorPicker, { lightenColor, darkenColor } from './ColorPicker'
 
-function TemplateForm({ clinicalStages, onStageToggle, onStageSelect, onStageColorChange, stageSectionCounts, style }) {
-  const [templateName, setTemplateName] = useState('')
+function TemplateForm({ templateName = '', onTemplateNameChange, clinicalStages, onStageToggle, onStageSelect, onStageColorChange, stageSectionCounts, style }) {
   const [showColorPickerForStage, setShowColorPickerForStage] = useState(null)
   const colorPreviewRefs = useRef({})
 
@@ -18,7 +17,7 @@ function TemplateForm({ clinicalStages, onStageToggle, onStageSelect, onStageCol
           className="form-input"
           placeholder="Template Name"
           value={templateName}
-          onChange={(e) => setTemplateName(e.target.value)}
+          onChange={(e) => onTemplateNameChange?.(e.target.value)}
         />
       </div>
 

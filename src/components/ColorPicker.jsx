@@ -237,7 +237,7 @@ function ColorPicker({
                 <span className="preview-time">9-10AM</span>
               </div>
               <div className="preview-row">
-                <span>Case Name • Appointment Type</span>
+                <span>Case Name • Appointment Template</span>
               </div>
               <div className="preview-row preview-footer">
                 <span>Confirmed</span>
