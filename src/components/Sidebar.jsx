@@ -10,7 +10,7 @@ function Sidebar() {
         </div>
       </div>
       <nav className="sidebar-nav">
-        <div className="nav-item active">
+        <div className="nav-item">
           <span className="material-symbols-outlined">calendar_today</span>
           <span>Calendar</span>
         </div>
@@ -24,7 +24,7 @@ function Sidebar() {
         </div>
       </nav>
       <div className="sidebar-footer">
-        <div className="nav-item">
+        <div className="nav-item active">
           <span className="material-symbols-outlined">settings</span>
           <span>Settings</span>
         </div>

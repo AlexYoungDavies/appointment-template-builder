@@ -105,8 +105,14 @@ const createSectionFromName = (name, existingSections = []) => {
   }
 }
 
+const FADE_MS = 150
+
 function ClinicalStageConfig({ selectedStage, clinicalStages, onStageColorChange, onSectionCountChange, onSectionsDataChange, stageSectionsData, stageDurations = {}, onStageDurationChange }) {
-  const content = stageContent[selectedStage] || { sections: [] }
+  // Displayed stage drives what content we show; we transition to selectedStage with fade out/in
+  const [displayedStage, setDisplayedStage] = useState(selectedStage)
+  const [transitionPhase, setTransitionPhase] = useState('idle') // 'idle' | 'fade-out' | 'fade-in'
+
+  const content = stageContent[displayedStage] || { sections: [] }
   
   // Track selected section names from the selector
   const [selectedSectionNames, setSelectedSectionNames] = useState(new Set())
@@ -129,14 +135,38 @@ function ClinicalStageConfig({ selectedStage, clinicalStages, onStageColorChange
   const addSectionBottomBtnRef = useRef(null)
   const copyFromBtnRef = useRef(null)
 
-  // Get the selected stage's color
-  const selectedStageData = clinicalStages?.find(s => s.name === selectedStage)
+  // Start fade-out when user selects a different stage
+  useEffect(() => {
+    if (selectedStage !== displayedStage && transitionPhase === 'idle') {
+      setTransitionPhase('fade-out')
+    }
+  }, [selectedStage, displayedStage, transitionPhase])
+
+  // After fade-out, switch content and fade in
+  useEffect(() => {
+    if (transitionPhase !== 'fade-out') return
+    const t = setTimeout(() => {
+      setDisplayedStage(selectedStage)
+      setTransitionPhase('fade-in')
+    }, FADE_MS)
+    return () => clearTimeout(t)
+  }, [transitionPhase, selectedStage])
+
+  // After fade-in, back to idle
+  useEffect(() => {
+    if (transitionPhase !== 'fade-in') return
+    const t = setTimeout(() => setTransitionPhase('idle'), FADE_MS)
+    return () => clearTimeout(t)
+  }, [transitionPhase])
+
+  // Get the selected stage's color (use displayed stage for visible content)
+  const selectedStageData = clinicalStages?.find(s => s.name === displayedStage)
   const selectedColor = selectedStageData?.color || '#7044bb'
 
-  // Helper: true if a section with this name exists in any stage that comes before selectedStage
+  // Helper: true if a section with this name exists in any stage that comes before displayedStage
   const sectionExistsInEarlierStages = (sectionName) => {
     const stageOrder = clinicalStages?.map(s => s.name) ?? []
-    const currentIndex = stageOrder.indexOf(selectedStage)
+    const currentIndex = stageOrder.indexOf(displayedStage)
     if (currentIndex <= 0) return false
     const earlierStageNames = stageOrder.slice(0, currentIndex)
     for (const stageName of earlierStageNames) {
@@ -151,16 +181,16 @@ function ClinicalStageConfig({ selectedStage, clinicalStages, onStageColorChange
   
   // Track if we're restoring data to prevent overwriting
   const isRestoringRef = useRef(false)
-  const previousStageRef = useRef(selectedStage)
+  const previousStageRef = useRef(displayedStage)
 
-  // Initialize or restore sections when stage changes
+  // Initialize or restore sections when displayed stage changes (after transition)
   useEffect(() => {
-    // Only restore when the stage actually changes
-    if (previousStageRef.current !== selectedStage) {
-      previousStageRef.current = selectedStage
+    // Only restore when the displayed stage actually changes
+    if (previousStageRef.current !== displayedStage) {
+      previousStageRef.current = displayedStage
       
       // Check if we have saved data for this stage
-      const savedData = stageSectionsData?.[selectedStage]
+      const savedData = stageSectionsData?.[displayedStage]
       
       if (savedData && Object.keys(savedData.orderedSections).length > 0) {
         // Restore saved sections for this stage
@@ -183,15 +213,15 @@ function ClinicalStageConfig({ selectedStage, clinicalStages, onStageColorChange
         }, 0)
       }
     }
-  }, [selectedStage, stageSectionsData])
+  }, [displayedStage, stageSectionsData])
 
   // Calculate and report section count whenever sections change
   useEffect(() => {
     if (onSectionCountChange) {
       const totalCount = Object.values(orderedSections).flat().length
-      onSectionCountChange(selectedStage, totalCount)
+      onSectionCountChange(displayedStage, totalCount)
     }
-  }, [orderedSections, selectedStage, onSectionCountChange])
+  }, [orderedSections, displayedStage, onSectionCountChange])
 
   // Report sections data whenever it changes (but not when restoring)
   useEffect(() => {
@@ -202,9 +232,9 @@ function ClinicalStageConfig({ selectedStage, clinicalStages, onStageColorChange
         selectedSectionNames: Array.from(selectedSectionNames),
         sectionVisibility: Object.fromEntries(sectionVisibility)
       }
-      onSectionsDataChange(selectedStage, sectionsData)
+      onSectionsDataChange(displayedStage, sectionsData)
     }
-  }, [orderedSections, selectedSectionNames, sectionVisibility, selectedStage, onSectionsDataChange])
+  }, [orderedSections, selectedSectionNames, sectionVisibility, displayedStage, onSectionsDataChange])
 
   // Handle click outside to close copy from menu
   useEffect(() => {
@@ -463,16 +493,25 @@ function ClinicalStageConfig({ selectedStage, clinicalStages, onStageColorChange
   const pastelColor = lightenColor(selectedColor)
   const darkenedColor = darkenColor(selectedColor)
 
-  const currentDuration = stageDurations[selectedStage] ?? ''
+  const currentDuration = stageDurations[displayedStage] ?? ''
+
+  const wrapperOpacity = transitionPhase === 'fade-out' ? 0 : 1
 
   return (
+    <div
+      className="clinical-stage-config-stage-transition"
+      style={{
+        opacity: wrapperOpacity,
+        transition: `opacity ${FADE_MS}ms ease-out`,
+      }}
+    >
     <div className="clinical-stage-config">
       <div className="config-section">
         <div className="color-section">
           <div style={{ flex: 1 }}>
             <label className="config-label">Calendar Block Color</label>
             <p className="config-description">
-              Select a color to represent {selectedStage}s of this template.
+              Select a color to represent {displayedStage}s of this template.
             </p>
           </div>
           <div style={{ position: 'relative' }}>
@@ -516,7 +555,7 @@ function ClinicalStageConfig({ selectedStage, clinicalStages, onStageColorChange
           <select
             className="duration-select"
             value={currentDuration}
-            onChange={(e) => onStageDurationChange?.(selectedStage, e.target.value)}
+            onChange={(e) => onStageDurationChange?.(displayedStage, e.target.value)}
           >
             <option value="">Default Duration (optional)</option>
             <option value="15">15 minutes</option>
@@ -532,7 +571,7 @@ function ClinicalStageConfig({ selectedStage, clinicalStages, onStageColorChange
         <div className="config-section">
           <div className="note-content-section">
             <div style={{ flex: 1 }}>
-              <label className="config-label">{selectedStage} Note Content</label>
+              <label className="config-label">{displayedStage} Note Content</label>
               <p className="config-description">
                 Configure what content you want to see on this template view.
               </p>
@@ -587,7 +626,7 @@ function ClinicalStageConfig({ selectedStage, clinicalStages, onStageColorChange
               </th>
               <th>Type</th>
               <th>Scribe?</th>
-              {selectedStage !== 'Pre-op' && (
+              {displayedStage !== 'Pre-op' && (
                 <th>
                   <span>Carry Forward Behavior</span>
                   <span className="carry-forward-header-tooltip-wrapper" title="">
@@ -614,7 +653,7 @@ function ClinicalStageConfig({ selectedStage, clinicalStages, onStageColorChange
               .map(([category, sections]) => (
               <React.Fragment key={category}>
                 <tr className="category-row">
-                  <td colSpan={selectedStage !== 'Pre-op' ? 5 : 4} className="category-header">{category}</td>
+                  <td colSpan={displayedStage !== 'Pre-op' ? 5 : 4} className="category-header">{category}</td>
                 </tr>
                 {sections.map((section, index) => {
                   const showIndicatorAbove = dropIndicator?.sectionId === section.id && 
@@ -628,7 +667,7 @@ function ClinicalStageConfig({ selectedStage, clinicalStages, onStageColorChange
                     <React.Fragment key={section.id}>
                       {showIndicatorAbove && (
                         <tr className="drop-indicator-row">
-                          <td colSpan={selectedStage !== 'Pre-op' ? 5 : 4} className="drop-indicator"></td>
+                          <td colSpan={displayedStage !== 'Pre-op' ? 5 : 4} className="drop-indicator"></td>
                         </tr>
                       )}
                       <tr
@@ -654,7 +693,7 @@ function ClinicalStageConfig({ selectedStage, clinicalStages, onStageColorChange
                             <span className="toggle-slider"></span>
                           </button>
                         </td>
-                        {selectedStage !== 'Pre-op' && (
+                        {displayedStage !== 'Pre-op' && (
                           <td>
                             {sectionExistsInEarlierStages(section.name) ? (
                               <div className="carry-forward-dropdown">
@@ -710,7 +749,7 @@ function ClinicalStageConfig({ selectedStage, clinicalStages, onStageColorChange
                       </tr>
                       {showIndicatorBelow && (
                         <tr className="drop-indicator-row">
-                          <td colSpan={selectedStage !== 'Pre-op' ? 5 : 4} className="drop-indicator"></td>
+                          <td colSpan={displayedStage !== 'Pre-op' ? 5 : 4} className="drop-indicator"></td>
                         </tr>
                       )}
                     </React.Fragment>
@@ -755,7 +794,7 @@ function ClinicalStageConfig({ selectedStage, clinicalStages, onStageColorChange
                 <div className="copy-from-menu">
                   {clinicalStages
                     .filter(stage => 
-                      stage.name !== selectedStage && 
+                      stage.name !== displayedStage && 
                       stageSectionsData[stage.name]?.orderedSections && 
                       Object.keys(stageSectionsData[stage.name].orderedSections).length > 0
                     )
@@ -769,7 +808,7 @@ function ClinicalStageConfig({ selectedStage, clinicalStages, onStageColorChange
                       </button>
                     ))}
                   {clinicalStages.filter(stage => 
-                    stage.name !== selectedStage && 
+                    stage.name !== displayedStage && 
                     stageSectionsData[stage.name]?.orderedSections && 
                     Object.keys(stageSectionsData[stage.name].orderedSections).length > 0
                   ).length === 0 && (
@@ -797,6 +836,7 @@ function ClinicalStageConfig({ selectedStage, clinicalStages, onStageColorChange
       </div>
 
       <TreatmentCodes />
+    </div>
     </div>
   )
 }
