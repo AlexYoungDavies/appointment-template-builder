@@ -7,16 +7,16 @@ import TreatmentCodes from './TreatmentCodes'
 export const stageContent = {
   'Pre-op': {
     sections: [
-      { id: 'subj-1', category: 'Subjective', name: 'Chief Complaint', type: 'Custom', scribe: true, carryForward: 'Select' },
-      { id: 'subj-2', category: 'Subjective', name: 'Social History', type: 'Default', scribe: true, carryForward: 'Select' },
-      { id: 'subj-3', category: 'Subjective', name: 'Subjective Notes', type: 'Default', scribe: true, carryForward: 'Select' },
-      { id: 'obj-1', category: 'Objective', name: 'Functional Assessment Tool Scores', type: 'Custom', scribe: true, carryForward: 'Select' },
-      { id: 'obj-2', category: 'Objective', name: 'Measurements', type: 'Default', scribe: true, carryForward: 'Select' },
-      { id: 'obj-3', category: 'Objective', name: 'Objective Comments', type: 'Default', scribe: true, carryForward: 'Select' },
-      { id: 'assess-1', category: 'Assessment', name: 'Diagnosis', type: 'Custom', scribe: true, carryForward: 'Select' },
-      { id: 'assess-2', category: 'Assessment', name: 'Assessments Template', type: 'Default', scribe: true, carryForward: 'Select' },
-      { id: 'plan-1', category: 'Plan', name: 'Goals', type: 'Custom', scribe: true, carryForward: 'Select' },
-      { id: 'plan-2', category: 'Plan', name: 'Plan of Care', type: 'Default', scribe: true, carryForward: 'Select' },
+      { id: 'subj-1', category: 'Subjective', name: 'Chief Complaint', type: 'Custom', scribe: true, carryForward: 'None' },
+      { id: 'subj-2', category: 'Subjective', name: 'Social History', type: 'Default', scribe: true, carryForward: 'None' },
+      { id: 'subj-3', category: 'Subjective', name: 'Subjective Notes', type: 'Default', scribe: true, carryForward: 'None' },
+      { id: 'obj-1', category: 'Objective', name: 'Functional Assessment Tool Scores', type: 'Custom', scribe: true, carryForward: 'None' },
+      { id: 'obj-2', category: 'Objective', name: 'Measurements', type: 'Default', scribe: true, carryForward: 'None' },
+      { id: 'obj-3', category: 'Objective', name: 'Objective Comments', type: 'Default', scribe: true, carryForward: 'None' },
+      { id: 'assess-1', category: 'Assessment', name: 'Diagnosis', type: 'Custom', scribe: true, carryForward: 'None' },
+      { id: 'assess-2', category: 'Assessment', name: 'Assessments Template', type: 'Default', scribe: true, carryForward: 'None' },
+      { id: 'plan-1', category: 'Plan', name: 'Goals', type: 'Custom', scribe: true, carryForward: 'None' },
+      { id: 'plan-2', category: 'Plan', name: 'Plan of Care', type: 'Default', scribe: true, carryForward: 'None' },
     ]
   },
   'Operation': {
@@ -69,6 +69,15 @@ export const stageContent = {
 // Define the order in which categories should always be displayed
 const CATEGORY_ORDER = ['Subjective', 'Objective', 'Assessment', 'Plan', 'Other']
 
+// Carry forward dropdown options (value -> label)
+const CARRY_FORWARD_OPTIONS = [
+  { value: 'None', label: 'None' },
+  { value: 'From last note', label: 'From last note' },
+  { value: 'From Initial Eval', label: 'From Initial Eval' },
+  { value: 'From most recent progress note', label: 'From most recent progress note' },
+  { value: 'From most recent progress note or Initial Eval', label: 'From most recent progress note or Initial Eval' },
+]
+
 // Helper to create a section object from a name
 const createSectionFromName = (name, existingSections = []) => {
   const category = getCategoryForSection(name)
@@ -96,7 +105,7 @@ const createSectionFromName = (name, existingSections = []) => {
   }
 }
 
-function ClinicalStageConfig({ selectedStage, clinicalStages, onStageColorChange, onSectionCountChange, onSectionsDataChange, stageSectionsData }) {
+function ClinicalStageConfig({ selectedStage, clinicalStages, onStageColorChange, onSectionCountChange, onSectionsDataChange, stageSectionsData, stageDurations = {}, onStageDurationChange }) {
   const content = stageContent[selectedStage] || { sections: [] }
   
   // Track selected section names from the selector
@@ -114,6 +123,7 @@ function ClinicalStageConfig({ selectedStage, clinicalStages, onStageColorChange
   const [showSectionSelector, setShowSectionSelector] = useState(false)
   const [sectionSelectorTrigger, setSectionSelectorTrigger] = useState(null)
   const [showCopyFromMenu, setShowCopyFromMenu] = useState(false)
+  const [openCarryForwardKey, setOpenCarryForwardKey] = useState(null)
   const colorIconRef = useRef(null)
   const addSectionTopBtnRef = useRef(null)
   const addSectionBottomBtnRef = useRef(null)
@@ -122,6 +132,22 @@ function ClinicalStageConfig({ selectedStage, clinicalStages, onStageColorChange
   // Get the selected stage's color
   const selectedStageData = clinicalStages?.find(s => s.name === selectedStage)
   const selectedColor = selectedStageData?.color || '#7044bb'
+
+  // Helper: true if a section with this name exists in any stage that comes before selectedStage
+  const sectionExistsInEarlierStages = (sectionName) => {
+    const stageOrder = clinicalStages?.map(s => s.name) ?? []
+    const currentIndex = stageOrder.indexOf(selectedStage)
+    if (currentIndex <= 0) return false
+    const earlierStageNames = stageOrder.slice(0, currentIndex)
+    for (const stageName of earlierStageNames) {
+      const savedData = stageSectionsData?.[stageName]?.orderedSections
+      const sections = savedData
+        ? Object.values(savedData).flat()
+        : (stageContent[stageName]?.sections ?? [])
+      if (sections.some(s => s.name === sectionName)) return true
+    }
+    return false
+  }
   
   // Track if we're restoring data to prevent overwriting
   const isRestoringRef = useRef(false)
@@ -198,6 +224,22 @@ function ClinicalStageConfig({ selectedStage, clinicalStages, onStageColorChange
       document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [showCopyFromMenu])
+
+  // Handle click outside to close carry forward dropdown
+  useEffect(() => {
+    if (!openCarryForwardKey) return
+
+    const handleClickOutside = (event) => {
+      const target = event.target
+      if (target.closest?.('.carry-forward-dropdown')) return
+      setOpenCarryForwardKey(null)
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [openCarryForwardKey])
 
   const handleCopyFromStage = (sourceStageName) => {
     const sourceData = stageSectionsData[sourceStageName]
@@ -421,6 +463,8 @@ function ClinicalStageConfig({ selectedStage, clinicalStages, onStageColorChange
   const pastelColor = lightenColor(selectedColor)
   const darkenedColor = darkenColor(selectedColor)
 
+  const currentDuration = stageDurations[selectedStage] ?? ''
+
   return (
     <div className="clinical-stage-config">
       <div className="config-section">
@@ -458,6 +502,29 @@ function ClinicalStageConfig({ selectedStage, clinicalStages, onStageColorChange
               position="below"
             />
           </div>
+        </div>
+      </div>
+
+      <div className="config-section">
+        <div className="color-section">
+          <div style={{ flex: 1 }}>
+            <label className="config-label">Default Duration</label>
+            <p className="config-description">
+              Set the default appointment duration for this clinical stage.
+            </p>
+          </div>
+          <select
+            className="duration-select"
+            value={currentDuration}
+            onChange={(e) => onStageDurationChange?.(selectedStage, e.target.value)}
+          >
+            <option value="">Default Duration (optional)</option>
+            <option value="15">15 minutes</option>
+            <option value="30">30 minutes</option>
+            <option value="45">45 minutes</option>
+            <option value="60">60 minutes</option>
+            <option value="90">90 minutes</option>
+          </select>
         </div>
       </div>
 
@@ -520,7 +587,17 @@ function ClinicalStageConfig({ selectedStage, clinicalStages, onStageColorChange
               </th>
               <th>Type</th>
               <th>Scribe?</th>
-              {selectedStage !== 'Pre-op' && <th>Carry Forward Behavior</th>}
+              {selectedStage !== 'Pre-op' && (
+                <th>
+                  <span>Carry Forward Behavior</span>
+                  <span className="carry-forward-header-tooltip-wrapper" title="">
+                    <span className="material-symbols-outlined carry-forward-header-icon">help</span>
+                    <span className="carry-forward-header-tooltip">
+                      Carry Forward allows you to pre-populate sections of your visit note based on content in previous visit notes. The section you wish to pre-populate must exist in earlier notes in order to pull the information forward.
+                    </span>
+                  </span>
+                </th>
+              )}
               <th></th>
             </tr>
           </thead>
@@ -579,17 +656,46 @@ function ClinicalStageConfig({ selectedStage, clinicalStages, onStageColorChange
                         </td>
                         {selectedStage !== 'Pre-op' && (
                           <td>
-                            <select 
-                              className="carry-forward-select" 
-                              value={section.carryForward || 'None'}
-                              onChange={(e) => handleCarryForwardChange(section.id, category, e.target.value)}
-                            >
-                              <option value="None">None</option>
-                              <option value="From last note">From last note</option>
-                              <option value="From Initial Eval">From Initial Eval</option>
-                              <option value="From most recent progress note">From most recent progress note</option>
-                              <option value="From most recent progress note or Initial Eval">From most recent progress note or Initial Eval</option>
-                            </select>
+                            {sectionExistsInEarlierStages(section.name) ? (
+                              <div className="carry-forward-dropdown">
+                                <button
+                                  type="button"
+                                  className="carry-forward-trigger"
+                                  onClick={() => {
+                                    const key = `${section.id}-${category}`
+                                    setOpenCarryForwardKey(openCarryForwardKey === key ? null : key)
+                                  }}
+                                >
+                                  <span className="carry-forward-trigger-label">
+                                    {CARRY_FORWARD_OPTIONS.find(o => o.value === (section.carryForward || 'None'))?.label ?? 'None'}
+                                  </span>
+                                  <span className="material-symbols-outlined carry-forward-trigger-icon">expand_more</span>
+                                </button>
+                                {openCarryForwardKey === `${section.id}-${category}` && (
+                                  <div className="carry-forward-menu">
+                                    <div className="carry-forward-menu-header">Import information from...</div>
+                                    <ul className="carry-forward-menu-list">
+                                      {CARRY_FORWARD_OPTIONS.map((opt) => (
+                                        <li key={opt.value}>
+                                          <button
+                                            type="button"
+                                            className={`carry-forward-menu-item ${(section.carryForward || 'None') === opt.value ? 'selected' : ''}`}
+                                            onClick={() => {
+                                              handleCarryForwardChange(section.id, category, opt.value)
+                                              setOpenCarryForwardKey(null)
+                                            }}
+                                          >
+                                            {opt.label}
+                                          </button>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="carry-forward-no-source">No section exists to pull from</span>
+                            )}
                           </td>
                         )}
                         <td>

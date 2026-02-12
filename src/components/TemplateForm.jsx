@@ -4,7 +4,6 @@ import ColorPicker, { lightenColor, darkenColor } from './ColorPicker'
 
 function TemplateForm({ clinicalStages, onStageToggle, onStageSelect, onStageColorChange, stageSectionCounts, style }) {
   const [templateName, setTemplateName] = useState('')
-  const [defaultDuration, setDefaultDuration] = useState('')
   const [showColorPickerForStage, setShowColorPickerForStage] = useState(null)
   const colorPreviewRefs = useRef({})
 
@@ -21,22 +20,6 @@ function TemplateForm({ clinicalStages, onStageToggle, onStageSelect, onStageCol
           value={templateName}
           onChange={(e) => setTemplateName(e.target.value)}
         />
-      </div>
-
-      <div className="form-section">
-        <label className="form-label">Default Duration</label>
-        <select
-          className="form-select"
-          value={defaultDuration}
-          onChange={(e) => setDefaultDuration(e.target.value)}
-        >
-          <option value="">Default Duration (optional)</option>
-          <option value="15">15 minutes</option>
-          <option value="30">30 minutes</option>
-          <option value="45">45 minutes</option>
-          <option value="60">60 minutes</option>
-          <option value="90">90 minutes</option>
-        </select>
       </div>
 
       <div className="form-section">

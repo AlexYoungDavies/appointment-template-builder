@@ -17,6 +17,7 @@ function App() {
   ])
   const [stageSectionCounts, setStageSectionCounts] = useState({})
   const [stageSectionsData, setStageSectionsData] = useState({})
+  const [stageDurations, setStageDurations] = useState({})
   const [leftColumnWidth, setLeftColumnWidth] = useState(380)
   const [isResizing, setIsResizing] = useState(false)
   const contentCardRef = useRef(null)
@@ -58,6 +59,13 @@ function App() {
     setStageSectionsData(prev => ({
       ...prev,
       [stageName]: sectionsData
+    }))
+  }
+
+  const handleStageDurationChange = (stageName, duration) => {
+    setStageDurations(prev => ({
+      ...prev,
+      [stageName]: duration
     }))
   }
 
@@ -132,6 +140,8 @@ function App() {
                   onSectionCountChange={handleSectionCountChange}
                   onSectionsDataChange={handleSectionsDataChange}
                   stageSectionsData={stageSectionsData}
+                  stageDurations={stageDurations}
+                  onStageDurationChange={handleStageDurationChange}
                 />
               </div>
             </div>
