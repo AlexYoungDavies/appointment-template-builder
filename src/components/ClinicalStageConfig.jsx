@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useMemo, useState, useEffect, useRef } from 'react'
 import './ClinicalStageConfig.css'
 import ColorPicker from './ColorPicker'
 import { darkenColor, lightenColor } from './colorUtils'
@@ -71,14 +71,31 @@ const stageContent = {
 // Define the order in which categories should always be displayed
 const CATEGORY_ORDER = ['Subjective', 'Objective', 'Assessment', 'Plan', 'Other']
 
-// Carry forward dropdown options (value -> label)
-const CARRY_FORWARD_OPTIONS = [
-  { value: 'None', label: 'None' },
-  { value: 'From last note', label: 'From last note' },
-  { value: 'From Initial Eval', label: 'From Initial Eval' },
-  { value: 'From most recent progress note', label: 'From most recent progress note' },
-  { value: 'From most recent progress note or Initial Eval', label: 'From most recent progress note or Initial Eval' },
-]
+const MOST_RECENT_PREFIX = 'mostRecent:'
+
+const normalizeCarryForwardValue = (value) => {
+  if (!value) return 'None'
+  if (value.startsWith(MOST_RECENT_PREFIX)) return value
+
+  // Legacy values (keep UI sensible for existing saved templates).
+  const legacyMap = {
+    'From last note': 'Last note',
+    'From most recent progress note': 'Last note',
+    'From Initial Eval': 'From first ever note',
+    'From most recent progress note or Initial Eval': 'From first ever note',
+  }
+  return legacyMap[value] || value
+}
+
+const carryForwardLabel = (value, stageNameById) => {
+  const normalized = normalizeCarryForwardValue(value)
+  if (normalized.startsWith(MOST_RECENT_PREFIX)) {
+    const stageId = normalized.slice(MOST_RECENT_PREFIX.length)
+    const stageName = stageNameById.get(stageId) || stageId
+    return `From most recent: ${stageName}`
+  }
+  return normalized
+}
 
 // Helper to create a section object from a name
 const createSectionFromName = (name, existingSections = []) => {
@@ -140,6 +157,10 @@ function ClinicalStageConfig({
   const [sectionSelectorTrigger, setSectionSelectorTrigger] = useState(null)
   const [showCopyFromMenu, setShowCopyFromMenu] = useState(false)
   const [openCarryForwardKey, setOpenCarryForwardKey] = useState(null)
+  const [openMostRecentSubmenuKey, setOpenMostRecentSubmenuKey] = useState(null)
+  const [carryForwardMenuPos, setCarryForwardMenuPos] = useState(null)
+  const carryForwardMenuRef = useRef(null)
+  const carryForwardTriggerRectRef = useRef(null)
   const colorIconRef = useRef(null)
   const addSectionTopBtnRef = useRef(null)
   const addSectionBottomBtnRef = useRef(null)
@@ -174,6 +195,7 @@ function ClinicalStageConfig({
   // Get the selected stage's color (use displayed stage for visible content)
   const selectedStageData = clinicalStages?.find(s => s.name === displayedStage)
   const selectedColor = selectedStageData?.color || '#7044bb'
+  const stageNameById = useMemo(() => new Map((clinicalStages || []).map((s) => [s.id, s.name])), [clinicalStages])
 
   // Helper: true if a section with this name exists in any stage that comes before displayedStage
   const sectionExistsInEarlierStages = (sectionName) => {
@@ -280,12 +302,47 @@ function ClinicalStageConfig({
       const target = event.target
       if (target.closest?.('.carry-forward-dropdown')) return
       setOpenCarryForwardKey(null)
+      setOpenMostRecentSubmenuKey(null)
+      setCarryForwardMenuPos(null)
     }
 
     document.addEventListener('mousedown', handleClickOutside)
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
     }
+  }, [openCarryForwardKey])
+
+  // Position carry-forward dropdown as fixed to avoid clipping.
+  useEffect(() => {
+    if (!openCarryForwardKey) return
+    const triggerRect = carryForwardTriggerRectRef.current
+    if (!triggerRect) return
+
+    const t = requestAnimationFrame(() => {
+      const menuEl = carryForwardMenuRef.current
+      if (!menuEl) return
+
+      const menuRect = menuEl.getBoundingClientRect()
+      const viewportW = window.innerWidth
+      const viewportH = window.innerHeight
+
+      let left = triggerRect.left
+      let top = triggerRect.bottom + 4
+      const minWidth = triggerRect.width
+
+      if (left + menuRect.width > viewportW - 8) {
+        left = Math.max(8, viewportW - menuRect.width - 8)
+      }
+
+      if (top + menuRect.height > viewportH - 8) {
+        const aboveTop = triggerRect.top - menuRect.height - 4
+        if (aboveTop >= 8) top = aboveTop
+      }
+
+      setCarryForwardMenuPos({ top, left, minWidth })
+    })
+
+    return () => cancelAnimationFrame(t)
   }, [openCarryForwardKey])
 
   const handleCopyFromStage = (sourceStageName) => {
@@ -717,34 +774,136 @@ function ClinicalStageConfig({
                                 <button
                                   type="button"
                                   className="carry-forward-trigger"
-                                  onClick={() => {
+                                  onClick={(e) => {
                                     const key = `${section.id}-${category}`
-                                    setOpenCarryForwardKey(openCarryForwardKey === key ? null : key)
+                                    const rect = e.currentTarget.getBoundingClientRect()
+                                    carryForwardTriggerRectRef.current = rect
+                                    if (openCarryForwardKey === key) {
+                                      setOpenMostRecentSubmenuKey(null)
+                                      setCarryForwardMenuPos(null)
+                                    }
+                                    const nextKey = openCarryForwardKey === key ? null : key
+                                    setOpenCarryForwardKey(nextKey)
+
+                                    // Set an initial position immediately to avoid a 0,0 flash.
+                                    if (nextKey) {
+                                      setCarryForwardMenuPos({
+                                        top: rect.bottom + 4,
+                                        left: rect.left,
+                                        minWidth: rect.width,
+                                      })
+                                    }
                                   }}
                                 >
                                   <span className="carry-forward-trigger-label">
-                                    {CARRY_FORWARD_OPTIONS.find(o => o.value === (section.carryForward || 'None'))?.label ?? 'None'}
+                                    {carryForwardLabel(section.carryForward || 'None', stageNameById)}
                                   </span>
                                   <span className="material-symbols-outlined carry-forward-trigger-icon">expand_more</span>
                                 </button>
                                 {openCarryForwardKey === `${section.id}-${category}` && (
-                                  <div className="carry-forward-menu">
+                                  <div
+                                    ref={carryForwardMenuRef}
+                                    className="carry-forward-menu"
+                                    style={
+                                      carryForwardMenuPos
+                                        ? {
+                                            position: 'fixed',
+                                            top: carryForwardMenuPos.top,
+                                            left: carryForwardMenuPos.left,
+                                            minWidth: carryForwardMenuPos.minWidth,
+                                            zIndex: 3000,
+                                          }
+                                        : { position: 'fixed', zIndex: 3000 }
+                                    }
+                                  >
                                     <div className="carry-forward-menu-header">Import information from...</div>
                                     <ul className="carry-forward-menu-list">
-                                      {CARRY_FORWARD_OPTIONS.map((opt) => (
-                                        <li key={opt.value}>
-                                          <button
-                                            type="button"
-                                            className={`carry-forward-menu-item ${(section.carryForward || 'None') === opt.value ? 'selected' : ''}`}
-                                            onClick={() => {
-                                              handleCarryForwardChange(section.id, category, opt.value)
-                                              setOpenCarryForwardKey(null)
-                                            }}
-                                          >
-                                            {opt.label}
-                                          </button>
-                                        </li>
-                                      ))}
+                                      <li>
+                                        <button
+                                          type="button"
+                                          className={`carry-forward-menu-item ${normalizeCarryForwardValue(section.carryForward) === 'None' ? 'selected' : ''}`}
+                                          onClick={() => {
+                                            handleCarryForwardChange(section.id, category, 'None')
+                                            setOpenCarryForwardKey(null)
+                                            setOpenMostRecentSubmenuKey(null)
+                                            setCarryForwardMenuPos(null)
+                                          }}
+                                        >
+                                          None
+                                        </button>
+                                      </li>
+                                      <li>
+                                        <button
+                                          type="button"
+                                          className={`carry-forward-menu-item ${normalizeCarryForwardValue(section.carryForward) === 'Last note' ? 'selected' : ''}`}
+                                          onClick={() => {
+                                            handleCarryForwardChange(section.id, category, 'Last note')
+                                            setOpenCarryForwardKey(null)
+                                            setOpenMostRecentSubmenuKey(null)
+                                            setCarryForwardMenuPos(null)
+                                          }}
+                                        >
+                                          Last note
+                                        </button>
+                                      </li>
+                                      <li
+                                        className="carry-forward-submenu-wrapper"
+                                        onMouseEnter={() => setOpenMostRecentSubmenuKey(`${section.id}-${category}`)}
+                                        onMouseLeave={() => setOpenMostRecentSubmenuKey(null)}
+                                      >
+                                        <button
+                                          type="button"
+                                          className="carry-forward-menu-item has-submenu"
+                                          onClick={() => {
+                                            const key = `${section.id}-${category}`
+                                            setOpenMostRecentSubmenuKey(openMostRecentSubmenuKey === key ? null : key)
+                                          }}
+                                        >
+                                          <span>From most recent:</span>
+                                          <span className="material-symbols-outlined carry-forward-submenu-icon">chevron_right</span>
+                                        </button>
+                                        {openMostRecentSubmenuKey === `${section.id}-${category}` ? (
+                                          <div className="carry-forward-submenu">
+                                            <div className="carry-forward-menu-header">Clinical stage</div>
+                                            <ul className="carry-forward-menu-list">
+                                              {(clinicalStages || []).map((s) => {
+                                                const optValue = `${MOST_RECENT_PREFIX}${s.id}`
+                                                const selected = normalizeCarryForwardValue(section.carryForward) === optValue
+                                                return (
+                                                  <li key={s.id}>
+                                                    <button
+                                                      type="button"
+                                                      className={`carry-forward-menu-item ${selected ? 'selected' : ''}`}
+                                                      onClick={() => {
+                                                        handleCarryForwardChange(section.id, category, optValue)
+                                                        setOpenCarryForwardKey(null)
+                                                        setOpenMostRecentSubmenuKey(null)
+                                                        setCarryForwardMenuPos(null)
+                                                      }}
+                                                    >
+                                                      {s.name}
+                                                    </button>
+                                                  </li>
+                                                )
+                                              })}
+                                            </ul>
+                                          </div>
+                                        ) : null}
+                                      </li>
+                                      <li>
+                                        <button
+                                          type="button"
+                                          className={`carry-forward-menu-item ${normalizeCarryForwardValue(section.carryForward) === 'From first ever note' ? 'selected' : ''}`}
+                                          onClick={() => {
+                                            handleCarryForwardChange(section.id, category, 'From first ever note')
+                                            setOpenCarryForwardKey(null)
+                                            setOpenMostRecentSubmenuKey(null)
+                                            setCarryForwardMenuPos(null)
+                                          }}
+                                        >
+                                          From first ever note
+                                        </button>
+                                      </li>
                                     </ul>
                                   </div>
                                 )}

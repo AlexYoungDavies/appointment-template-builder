@@ -449,6 +449,39 @@
   border-radius: 6px;
   box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.12);
   z-index: 1000;
+  overflow: visible;
+}
+
+.carry-forward-submenu-wrapper {
+  position: relative;
+}
+
+.carry-forward-menu-item.has-submenu {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.carry-forward-submenu-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  color: #666;
+  flex-shrink: 0;
+}
+
+.carry-forward-submenu {
+  position: absolute;
+  top: 0;
+  left: 100%;
+  margin-left: 6px;
+  min-width: 220px;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.12);
+  z-index: 1001;
   overflow: hidden;
 }
 
