@@ -1,9 +1,30 @@
-import React, { useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import './AppointmentTemplatesList.css'
 
-function AppointmentTemplatesList({ templates, onNew, onEdit, onDelete, onDuplicate }) {
+function AppointmentTemplatesList({
+  templates,
+  clinicalStageCatalog = [],
+  onNew,
+  onEdit,
+  onDelete,
+  onDuplicate,
+  onCreateClinicalStage,
+  onDeleteClinicalStage,
+}) {
   const [activeTab, setActiveTab] = useState('internal')
   const [searchQuery, setSearchQuery] = useState('')
+
+  const [isStageDrawerOpen, setIsStageDrawerOpen] = useState(false)
+  const [newStageName, setNewStageName] = useState('')
+  const [newStageEvaluative, setNewStageEvaluative] = useState(false)
+  const stageNameInputRef = useRef(null)
+
+  const normalizedStageName = newStageName.trim()
+  const stageNameExists = useMemo(() => {
+    if (!normalizedStageName) return false
+    const target = normalizedStageName.toLowerCase()
+    return (clinicalStageCatalog || []).some((s) => (s.name || '').trim().toLowerCase() === target)
+  }, [clinicalStageCatalog, normalizedStageName])
 
   const filteredTemplates = searchQuery.trim()
     ? templates.filter((template) => {
@@ -18,6 +39,34 @@ function AppointmentTemplatesList({ templates, onNew, onEdit, onDelete, onDuplic
       })
     : templates
 
+  useEffect(() => {
+    if (!isStageDrawerOpen) return
+    stageNameInputRef.current?.focus?.()
+  }, [isStageDrawerOpen])
+
+  useEffect(() => {
+    if (!isStageDrawerOpen) return
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setIsStageDrawerOpen(false)
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [isStageDrawerOpen])
+
+  const openCreateStageDrawer = () => {
+    setNewStageName('')
+    setNewStageEvaluative(false)
+    setIsStageDrawerOpen(true)
+  }
+
+  const handleCreateStage = () => {
+    if (!normalizedStageName || stageNameExists) return
+    onCreateClinicalStage?.({ name: normalizedStageName, evaluative: newStageEvaluative })
+    setIsStageDrawerOpen(false)
+  }
+
   return (
     <div className="appointment-templates-list">
       <div className="templates-list-header">
@@ -28,6 +77,59 @@ function AppointmentTemplatesList({ templates, onNew, onEdit, onDelete, onDuplic
           </p>
         </div>
       </div>
+      <div className="clinical-stages-section">
+        <div className="clinical-stages-header-row">
+          <div className="clinical-stages-header-content">
+            <h2 className="clinical-stages-title">Clinical Stages</h2>
+            <p className="clinical-stages-description">
+              Clinical stages control what appears in the &quot;Applicable Clinical Stages&quot; list when configuring appointment templates.
+            </p>
+          </div>
+          <button type="button" className="btn-new-template btn-new-stage" onClick={openCreateStageDrawer}>
+            <span className="material-symbols-outlined btn-new-icon">add</span>
+            New Clinical Stage
+          </button>
+        </div>
+
+        <table className="templates-table clinical-stages-table">
+          <thead>
+            <tr>
+              <th className="col-name">Name</th>
+              <th className="col-evaluative">Evaluative?</th>
+              <th className="col-actions" />
+            </tr>
+          </thead>
+          <tbody>
+            {(clinicalStageCatalog || []).length === 0 ? (
+              <tr>
+                <td colSpan={3} className="empty-state-cell">
+                  No clinical stages yet. Create one using &quot;New Clinical Stage&quot;.
+                </td>
+              </tr>
+            ) : (
+              (clinicalStageCatalog || []).map((stage) => (
+                <tr key={stage.id}>
+                  <td className="col-name">{stage.name}</td>
+                  <td className="col-evaluative">{stage.evaluative ? 'Yes' : 'No'}</td>
+                  <td className="col-actions">
+                    <div className="row-actions">
+                      <button
+                        type="button"
+                        className="action-btn"
+                        onClick={() => onDeleteClinicalStage?.(stage.id)}
+                        title="Delete"
+                      >
+                        <span className="material-symbols-outlined">delete</span>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
       <div className="templates-table-wrapper">
         <div className="templates-header-row">
           <div className="tabs-wrapper">
@@ -134,6 +236,74 @@ function AppointmentTemplatesList({ templates, onNew, onEdit, onDelete, onDuplic
           </tbody>
         </table>
       </div>
+
+      {isStageDrawerOpen ? (
+        <div className="drawer-overlay" onClick={() => setIsStageDrawerOpen(false)} role="presentation">
+          <aside
+            className="drawer-panel"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Create clinical stage"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="drawer-header">
+              <div>
+                <div className="drawer-title">Create Clinical Stage</div>
+                <div className="drawer-subtitle">Add a clinical stage to be used in appointment templates.</div>
+              </div>
+              <button
+                type="button"
+                className="drawer-close-btn"
+                onClick={() => setIsStageDrawerOpen(false)}
+                title="Close"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            <div className="drawer-body">
+              <div className="drawer-field">
+                <label className="drawer-label" htmlFor="new-clinical-stage-name">Name</label>
+                <input
+                  id="new-clinical-stage-name"
+                  ref={stageNameInputRef}
+                  type="text"
+                  className="drawer-input"
+                  placeholder="e.g. Initial Eval"
+                  value={newStageName}
+                  onChange={(e) => setNewStageName(e.target.value)}
+                />
+                {stageNameExists ? (
+                  <div className="drawer-field-hint error">A clinical stage with this name already exists.</div>
+                ) : null}
+              </div>
+
+              <label className="drawer-checkbox-row">
+                <input
+                  type="checkbox"
+                  checked={newStageEvaluative}
+                  onChange={(e) => setNewStageEvaluative(e.target.checked)}
+                />
+                <span>Evaluative</span>
+              </label>
+            </div>
+
+            <div className="drawer-footer">
+              <button type="button" className="drawer-secondary-btn" onClick={() => setIsStageDrawerOpen(false)}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="drawer-primary-btn"
+                onClick={handleCreateStage}
+                disabled={!normalizedStageName || stageNameExists}
+              >
+                Create Stage
+              </button>
+            </div>
+          </aside>
+        </div>
+      ) : null}
     </div>
   )
 }
