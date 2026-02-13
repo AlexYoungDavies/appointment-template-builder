@@ -1,10 +1,21 @@
 import { useState, useRef } from 'react'
 import './TemplateForm.css'
-import ColorPicker, { lightenColor, darkenColor } from './ColorPicker'
+import ColorPicker from './ColorPicker'
+import { darkenColor, lightenColor } from './colorUtils'
 
-function TemplateForm({ templateName = '', onTemplateNameChange, clinicalStages, onStageToggle, onStageSelect, onStageColorChange, stageSectionCounts, style }) {
+function TemplateForm({
+  templateName = '',
+  onTemplateNameChange,
+  clinicalStagesEnabled = true,
+  clinicalStages,
+  onStageToggle,
+  onStageSelect,
+  onStageColorChange,
+  stageSectionCounts,
+  style,
+}) {
   const [showColorPickerForStage, setShowColorPickerForStage] = useState(null)
-  const colorPreviewRefs = useRef({})
+  const colorPickerTriggerRef = useRef(null)
 
   return (
     <div className="template-form" style={style}>
@@ -21,43 +32,43 @@ function TemplateForm({ templateName = '', onTemplateNameChange, clinicalStages,
         />
       </div>
 
-      <div className="form-section">
-        <h2 className="section-title">Applicable Clinical Stages</h2>
-        <p className="section-description">
-          Select which clinical stages views you want to include in this template, and what content each view contains.
-        </p>
-        
-        <div className="clinical-stages-list">
-          {clinicalStages.map((stage) => {
-            const pastelColor = lightenColor(stage.color || '#7044bb')
-            const darkenedColor = darkenColor(stage.color || '#7044bb')
-            const isColorPickerOpen = showColorPickerForStage === stage.id
-            const sectionCount = stageSectionCounts[stage.name] || 0
-            
-            return (
-              <div
-                key={stage.id}
-                className={`clinical-stage-item ${stage.selected ? 'selected' : ''} ${!stage.enabled ? 'disabled' : ''}`}
-                onClick={(e) => {
-                  // Don't select stage if color picker is open
-                  if (!isColorPickerOpen) {
-                    onStageSelect(stage.id)
-                  }
-                }}
-              >
-                <div className="stage-checkbox" onClick={(e) => e.stopPropagation()}>
-                  <input
-                    type="checkbox"
-                    className="checkbox-input"
-                    checked={stage.enabled}
-                    onChange={() => onStageToggle(stage.id)}
-                  />
-                </div>
-                <span className="stage-name">{stage.name}</span>
-                <span className="stage-section-count">{sectionCount} {sectionCount === 1 ? 'Section' : 'Sections'}</span>
-                <div className="stage-color-preview-wrapper">
-                  <div 
-                    ref={el => colorPreviewRefs.current[stage.id] = el}
+      {clinicalStagesEnabled ? (
+        <div className="form-section">
+          <h2 className="section-title">Applicable Clinical Stages</h2>
+          <p className="section-description">
+            Select which clinical stages views you want to include in this template, and what content each view contains.
+          </p>
+
+          <div className="clinical-stages-list">
+            {clinicalStages.map((stage) => {
+              const pastelColor = lightenColor(stage.color || '#7044bb')
+              const darkenedColor = darkenColor(stage.color || '#7044bb')
+              const isColorPickerOpen = showColorPickerForStage === stage.id
+              const sectionCount = stageSectionCounts[stage.name] || 0
+
+              return (
+                <div
+                  key={stage.id}
+                  className={`clinical-stage-item ${stage.selected ? 'selected' : ''} ${!stage.enabled ? 'disabled' : ''}`}
+                  onClick={() => {
+                    // Don't select stage if color picker is open
+                    if (!isColorPickerOpen) {
+                      onStageSelect(stage.id)
+                    }
+                  }}
+                >
+                  <div className="stage-checkbox" onClick={(e) => e.stopPropagation()}>
+                    <input
+                      type="checkbox"
+                      className="checkbox-input"
+                      checked={stage.enabled}
+                      onChange={() => onStageToggle(stage.id)}
+                    />
+                  </div>
+                  <span className="stage-name">{stage.name}</span>
+                  <span className="stage-section-count">{sectionCount} {sectionCount === 1 ? 'Section' : 'Sections'}</span>
+                  <div className="stage-color-preview-wrapper">
+                    <div
                     className={`stage-color-preview ${!stage.enabled ? 'disabled' : ''}`}
                     onClick={(e) => {
                       if (!stage.enabled) {
@@ -65,6 +76,7 @@ function TemplateForm({ templateName = '', onTemplateNameChange, clinicalStages,
                         return
                       }
                       e.stopPropagation()
+                      colorPickerTriggerRef.current = e.currentTarget
                       setShowColorPickerForStage(isColorPickerOpen ? null : stage.id)
                     }}
                     style={{
@@ -74,23 +86,24 @@ function TemplateForm({ templateName = '', onTemplateNameChange, clinicalStages,
                       cursor: !stage.enabled ? 'not-allowed' : 'pointer'
                     }}
                   />
-                  {stage.enabled && (
-                    <ColorPicker
-                      selectedColor={stage.color || '#7044bb'}
-                      onColorChange={(color) => onStageColorChange(stage.id, color)}
-                      isOpen={isColorPickerOpen}
-                      onClose={() => setShowColorPickerForStage(null)}
-                      triggerRef={colorPreviewRefs.current[stage.id]}
-                      position="beside"
-                    />
-                  )}
+                    {stage.enabled && (
+                      <ColorPicker
+                        selectedColor={stage.color || '#7044bb'}
+                        onColorChange={(color) => onStageColorChange(stage.id, color)}
+                        isOpen={isColorPickerOpen}
+                        onClose={() => setShowColorPickerForStage(null)}
+                        triggerRef={colorPickerTriggerRef}
+                        position="beside"
+                      />
+                    )}
+                  </div>
+                  <span className="material-symbols-outlined arrow-icon">chevron_right</span>
                 </div>
-                <span className="material-symbols-outlined arrow-icon">chevron_right</span>
-              </div>
-            )
-          })}
+              )
+            })}
+          </div>
         </div>
-      </div>
+      ) : null}
     </div>
   )
 }

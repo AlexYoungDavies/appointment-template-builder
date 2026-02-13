@@ -7,6 +7,9 @@ import ClinicalStageConfig from './components/ClinicalStageConfig'
 import AppointmentTemplatesList from './components/AppointmentTemplatesList'
 
 const DEFAULT_STAGE_COLOR = '#7044bb'
+const CLINICAL_STAGES_ENABLED_STORAGE_KEY = 'appt-template-builder:clinicalStagesEnabled'
+const SINGLE_STAGE_NAME = 'Default'
+const SINGLE_STAGE_ID = 'default'
 
 // Master list of clinical stages. This collection controls what shows up
 // in the "Applicable Clinical Stages" list when configuring templates.
@@ -93,6 +96,16 @@ function App() {
   const [templates, setTemplates] = useState([])
   const [editingTemplateId, setEditingTemplateId] = useState(null)
 
+  const [clinicalStagesEnabled, setClinicalStagesEnabled] = useState(() => {
+    try {
+      const raw = localStorage.getItem(CLINICAL_STAGES_ENABLED_STORAGE_KEY)
+      if (raw === null) return true
+      return raw === 'true'
+    } catch {
+      return true
+    }
+  })
+
   const [clinicalStageCatalog, setClinicalStageCatalog] = useState(INITIAL_CLINICAL_STAGE_CATALOG)
   const [templateName, setTemplateName] = useState('')
   const [selectedStage, setSelectedStage] = useState('Pre-op')
@@ -102,51 +115,158 @@ function App() {
   const [stageSectionCounts, setStageSectionCounts] = useState({})
   const [stageSectionsData, setStageSectionsData] = useState({})
   const [stageDurations, setStageDurations] = useState({})
+  const [singleTemplateColor, setSingleTemplateColor] = useState(DEFAULT_STAGE_COLOR)
   const [leftColumnWidth, setLeftColumnWidth] = useState(380)
   const [isResizing, setIsResizing] = useState(false)
   const contentCardRef = useRef(null)
 
+  useEffect(() => {
+    try {
+      localStorage.setItem(CLINICAL_STAGES_ENABLED_STORAGE_KEY, String(clinicalStagesEnabled))
+    } catch {
+      // ignore storage failures
+    }
+  }, [clinicalStagesEnabled])
+
   // Keep the template-stage list aligned to the master catalog (e.g. newly added stages appear).
   useEffect(() => {
+    if (!clinicalStagesEnabled) return
     setClinicalStages((prev) =>
       mergeTemplateStagesWithCatalog(prev, clinicalStageCatalog, { newStagesEnabledDefault: false })
     )
-  }, [clinicalStageCatalog])
+  }, [clinicalStagesEnabled, clinicalStageCatalog])
+
+  // Keep selected stage valid when toggling clinical stages on/off.
+  useEffect(() => {
+    if (!clinicalStagesEnabled) {
+      setSelectedStage(SINGLE_STAGE_NAME)
+      return
+    }
+    setSelectedStage((prev) => {
+      if (prev !== SINGLE_STAGE_NAME) return prev
+      const firstEnabled = clinicalStages.find((s) => s.enabled)
+      return firstEnabled?.name || clinicalStages[0]?.name || 'Pre-op'
+    })
+  }, [clinicalStagesEnabled, clinicalStages])
 
   const loadTemplateIntoConfig = (template) => {
     if (!template) return
     setTemplateName(template.name || '')
-    const mergedStages = mergeTemplateStagesWithCatalog(
-      JSON.parse(JSON.stringify(template.clinicalStages || [])),
-      clinicalStageCatalog,
-      { newStagesEnabledDefault: false }
-    )
+
+    if (!clinicalStagesEnabled) {
+      const templateStages = template.clinicalStages || []
+      const sourceStageName =
+        templateStages.find((s) => s.enabled)?.name ||
+        templateStages[0]?.name ||
+        SINGLE_STAGE_NAME
+
+      const sourceColor =
+        template.templateColor ||
+        templateStages.find((s) => s.name === sourceStageName)?.color ||
+        DEFAULT_STAGE_COLOR
+      setSingleTemplateColor(sourceColor)
+
+      const sourceSectionsData =
+        template.stageSectionsData?.[sourceStageName] ||
+        template.stageSectionsData?.[SINGLE_STAGE_NAME] ||
+        {}
+      const sourceSectionCount =
+        template.stageSectionCounts?.[sourceStageName] ||
+        template.stageSectionCounts?.[SINGLE_STAGE_NAME] ||
+        0
+      const sourceDuration =
+        template.stageDurations?.[sourceStageName] ||
+        template.stageDurations?.[SINGLE_STAGE_NAME] ||
+        ''
+
+      setStageSectionCounts({ [SINGLE_STAGE_NAME]: sourceSectionCount })
+      setStageSectionsData({ [SINGLE_STAGE_NAME]: JSON.parse(JSON.stringify(sourceSectionsData)) })
+      setStageDurations({ [SINGLE_STAGE_NAME]: sourceDuration })
+      setSelectedStage(SINGLE_STAGE_NAME)
+      return
+    }
+
+    const templateStages = template.clinicalStages || []
+    const mergedStages =
+      templateStages.length > 0
+        ? mergeTemplateStagesWithCatalog(
+            JSON.parse(JSON.stringify(templateStages)),
+            clinicalStageCatalog,
+            { newStagesEnabledDefault: false }
+          )
+        : buildNewTemplateStagesFromCatalog(clinicalStageCatalog)
+
     setClinicalStages(mergedStages)
-    setStageSectionCounts({ ...(template.stageSectionCounts || {}) })
-    setStageSectionsData(JSON.parse(JSON.stringify(template.stageSectionsData || {})))
-    setStageDurations({ ...(template.stageDurations || {}) })
+
+    let nextSectionCounts = { ...(template.stageSectionCounts || {}) }
+    let nextSectionsData = JSON.parse(JSON.stringify(template.stageSectionsData || {}))
+    let nextDurations = { ...(template.stageDurations || {}) }
+
+    // If this template was created in single-template mode, seed each stage from the Default config.
+    if (templateStages.length === 0 && nextSectionsData[SINGLE_STAGE_NAME]) {
+      const seedSections = JSON.parse(JSON.stringify(nextSectionsData[SINGLE_STAGE_NAME]))
+      const seedCount = nextSectionCounts[SINGLE_STAGE_NAME] || 0
+      const seedDuration = nextDurations[SINGLE_STAGE_NAME] || ''
+
+      mergedStages.forEach((stage) => {
+        if (!nextSectionsData[stage.name]) nextSectionsData[stage.name] = JSON.parse(JSON.stringify(seedSections))
+        if (nextSectionCounts[stage.name] == null) nextSectionCounts[stage.name] = seedCount
+        if (nextDurations[stage.name] == null) nextDurations[stage.name] = seedDuration
+      })
+    }
+
+    setStageSectionCounts(nextSectionCounts)
+    setStageSectionsData(nextSectionsData)
+    setStageDurations(nextDurations)
+
     const firstEnabled = mergedStages.find((s) => s.enabled)
     setSelectedStage(firstEnabled?.name || mergedStages[0]?.name || 'Pre-op')
   }
 
   const resetConfigToEmpty = () => {
     setTemplateName('')
-    const freshStages = buildNewTemplateStagesFromCatalog(clinicalStageCatalog)
-    setClinicalStages(JSON.parse(JSON.stringify(freshStages)))
     setStageSectionCounts({})
     setStageSectionsData({})
     setStageDurations({})
-    setSelectedStage(freshStages[0]?.name || 'Pre-op')
+    setSingleTemplateColor(DEFAULT_STAGE_COLOR)
     setEditingTemplateId(null)
+
+    if (!clinicalStagesEnabled) {
+      setSelectedStage(SINGLE_STAGE_NAME)
+      return
+    }
+
+    const freshStages = buildNewTemplateStagesFromCatalog(clinicalStageCatalog)
+    setClinicalStages(JSON.parse(JSON.stringify(freshStages)))
+    setSelectedStage(freshStages[0]?.name || 'Pre-op')
   }
 
-  const getCurrentConfigSnapshot = () => ({
-    name: templateName,
-    clinicalStages: JSON.parse(JSON.stringify(clinicalStages)),
-    stageSectionCounts: { ...stageSectionCounts },
-    stageSectionsData: JSON.parse(JSON.stringify(stageSectionsData)),
-    stageDurations: { ...stageDurations },
-  })
+  const getCurrentConfigSnapshot = () => {
+    if (!clinicalStagesEnabled) {
+      return {
+        name: templateName,
+        clinicalStages: [],
+        templateColor: singleTemplateColor,
+        stageSectionCounts: {
+          [SINGLE_STAGE_NAME]: stageSectionCounts[SINGLE_STAGE_NAME] || 0,
+        },
+        stageSectionsData: {
+          [SINGLE_STAGE_NAME]: JSON.parse(JSON.stringify(stageSectionsData[SINGLE_STAGE_NAME] || {})),
+        },
+        stageDurations: {
+          [SINGLE_STAGE_NAME]: stageDurations[SINGLE_STAGE_NAME] || '',
+        },
+      }
+    }
+
+    return {
+      name: templateName,
+      clinicalStages: JSON.parse(JSON.stringify(clinicalStages)),
+      stageSectionCounts: { ...stageSectionCounts },
+      stageSectionsData: JSON.parse(JSON.stringify(stageSectionsData)),
+      stageDurations: { ...stageDurations },
+    }
+  }
 
   const handleNewTemplate = () => {
     resetConfigToEmpty()
@@ -239,6 +359,10 @@ function App() {
   }
 
   const handleStageColorChange = (stageId, color) => {
+    if (!clinicalStagesEnabled) {
+      setSingleTemplateColor(color)
+      return
+    }
     setClinicalStages((stages) =>
       stages.map((stage) =>
         stage.id === stageId ? { ...stage, color } : stage
@@ -370,6 +494,8 @@ function App() {
             <AppointmentTemplatesList
               templates={templates}
               clinicalStageCatalog={clinicalStageCatalog}
+              clinicalStagesEnabled={clinicalStagesEnabled}
+              onToggleClinicalStagesEnabled={() => setClinicalStagesEnabled((prev) => !prev)}
               onNew={handleNewTemplate}
               onEdit={handleEditTemplate}
               onDelete={handleDeleteTemplate}
@@ -389,7 +515,8 @@ function App() {
                   <TemplateForm
                     templateName={templateName}
                     onTemplateNameChange={setTemplateName}
-                    clinicalStages={clinicalStages}
+                    clinicalStagesEnabled={clinicalStagesEnabled}
+                    clinicalStages={clinicalStagesEnabled ? clinicalStages : [{ id: SINGLE_STAGE_ID, name: SINGLE_STAGE_NAME, enabled: true, selected: true, color: singleTemplateColor }]}
                     onStageToggle={handleStageToggle}
                     onStageSelect={handleStageSelect}
                     onStageColorChange={handleStageColorChange}
@@ -406,8 +533,9 @@ function App() {
                     style={{ minWidth: '700px' }}
                   >
                     <ClinicalStageConfig
-                      selectedStage={selectedStage}
-                      clinicalStages={clinicalStages}
+                      clinicalStagesEnabled={clinicalStagesEnabled}
+                      selectedStage={clinicalStagesEnabled ? selectedStage : SINGLE_STAGE_NAME}
+                      clinicalStages={clinicalStagesEnabled ? clinicalStages : [{ id: SINGLE_STAGE_ID, name: SINGLE_STAGE_NAME, enabled: true, selected: true, color: singleTemplateColor }]}
                       onStageColorChange={handleStageColorChange}
                       onSectionCountChange={handleSectionCountChange}
                       onSectionsDataChange={handleSectionsDataChange}

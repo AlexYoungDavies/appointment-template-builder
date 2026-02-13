@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useMemo, useState, useRef, useEffect } from 'react'
 import './SectionSelector.css'
 
 const sectionGroups = {
@@ -62,35 +62,11 @@ const sectionGroups = {
   ]
 }
 
-// Helper function to determine category from section name
-const getCategoryForSection = (sectionName) => {
-  const categoryMap = {
-    'Subjective': ['Chief Complaint', 'History of Present Illness', 'Past Medical History', 'Medications', 'Allergies', 'Family History', 'Social History', 'Review of Systems'],
-    'Objective': ['Physical Examination', 'Vital Signs', 'Measurements', 'Functional Assessment Tool Scores', 'Objective Comments', 'Test Results'],
-    'Assessment': ['Diagnosis', 'Assessments Template', 'Clinical Assessment', 'Problem List'],
-    'Plan': ['Plan of Care', 'Goals', 'Treatment Plan', 'Medications Plan', 'Follow-up Instructions', 'Patient Education'],
-    'Other': ['Visit Note Section', 'Custom Section', 'Additional Notes', 'Documentation']
-  }
-  
-  for (const [category, items] of Object.entries(categoryMap)) {
-    if (items.includes(sectionName)) {
-      return category
-    }
-  }
-  return 'Other'
-}
-
 function SectionSelector({ isOpen, onClose, triggerRef, position = 'below', selectedSections = [], onSelectionChange }) {
   const [selectedGroup, setSelectedGroup] = useState('All')
   const [searchQuery, setSearchQuery] = useState('')
   const flyoutRef = useRef(null)
-  
-  // Track selected items internally
-  const [internalSelected, setInternalSelected] = useState(new Set(selectedSections))
-  
-  useEffect(() => {
-    setInternalSelected(new Set(selectedSections))
-  }, [selectedSections])
+  const selectedSet = useMemo(() => new Set(selectedSections), [selectedSections])
 
   useEffect(() => {
     if (isOpen) {
@@ -159,17 +135,11 @@ function SectionSelector({ isOpen, onClose, triggerRef, position = 'below', sele
   if (!isOpen) return null
 
   const handleItemToggle = (itemName) => {
-    const newSelected = new Set(internalSelected)
-    if (newSelected.has(itemName)) {
-      newSelected.delete(itemName)
-    } else {
-      newSelected.add(itemName)
-    }
-    setInternalSelected(newSelected)
-    
-    if (onSelectionChange) {
-      onSelectionChange(Array.from(newSelected))
-    }
+    if (!onSelectionChange) return
+    const next = new Set(selectedSet)
+    if (next.has(itemName)) next.delete(itemName)
+    else next.add(itemName)
+    onSelectionChange(Array.from(next))
   }
 
   const currentItems = sectionGroups[selectedGroup] || []
@@ -210,7 +180,7 @@ function SectionSelector({ isOpen, onClose, triggerRef, position = 'below', sele
           <div className="section-selector-items">
             {filteredItems.map((item, index) => {
               const uniqueId = `section-${selectedGroup}-${index}-${item}`
-              const isChecked = internalSelected.has(item)
+              const isChecked = selectedSet.has(item)
               return (
                 <div key={uniqueId} className="section-selector-item">
                   <input
@@ -240,7 +210,5 @@ function SectionSelector({ isOpen, onClose, triggerRef, position = 'below', sele
     </div>
   )
 }
-
-export { getCategoryForSection }
 
 export default SectionSelector

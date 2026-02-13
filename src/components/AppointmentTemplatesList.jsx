@@ -4,6 +4,8 @@ import './AppointmentTemplatesList.css'
 function AppointmentTemplatesList({
   templates,
   clinicalStageCatalog = [],
+  clinicalStagesEnabled = true,
+  onToggleClinicalStagesEnabled,
   onNew,
   onEdit,
   onDelete,
@@ -77,57 +79,80 @@ function AppointmentTemplatesList({
           </p>
         </div>
       </div>
-      <div className="clinical-stages-section">
-        <div className="clinical-stages-header-row">
-          <div className="clinical-stages-header-content">
-            <h2 className="clinical-stages-title">Clinical Stages</h2>
-            <p className="clinical-stages-description">
-              Clinical stages control what appears in the &quot;Applicable Clinical Stages&quot; list when configuring appointment templates.
-            </p>
+      <div className="clinical-stages-block">
+        <div className="clinical-stages-settings-row">
+          <div className="clinical-stages-settings-content">
+            <div className="clinical-stages-settings-title">Enable Clinical Stages</div>
+            <div className="clinical-stages-settings-description">
+              Clinical stages represent different stages in a patient&apos;s journey through your care. Enabling this allows you to tailor appointment templates for each stage you add.
+            </div>
           </div>
-          <button type="button" className="btn-new-template btn-new-stage" onClick={openCreateStageDrawer}>
-            <span className="material-symbols-outlined btn-new-icon">add</span>
-            New Clinical Stage
+          <button
+            type="button"
+            className={`clinical-stages-toggle ${clinicalStagesEnabled ? 'on' : 'off'}`}
+            aria-pressed={clinicalStagesEnabled}
+            aria-label="Enable clinical stages"
+            onClick={() => onToggleClinicalStagesEnabled?.()}
+          >
+            <span className="clinical-stages-toggle-slider" />
           </button>
         </div>
 
-        <table className="templates-table clinical-stages-table">
-          <thead>
-            <tr>
-              <th className="col-name">Name</th>
-              <th className="col-evaluative">Evaluative?</th>
-              <th className="col-actions" />
-            </tr>
-          </thead>
-          <tbody>
-            {(clinicalStageCatalog || []).length === 0 ? (
-              <tr>
-                <td colSpan={3} className="empty-state-cell">
-                  No clinical stages yet. Create one using &quot;New Clinical Stage&quot;.
-                </td>
-              </tr>
-            ) : (
-              (clinicalStageCatalog || []).map((stage) => (
-                <tr key={stage.id}>
-                  <td className="col-name">{stage.name}</td>
-                  <td className="col-evaluative">{stage.evaluative ? 'Yes' : 'No'}</td>
-                  <td className="col-actions">
-                    <div className="row-actions">
-                      <button
-                        type="button"
-                        className="action-btn"
-                        onClick={() => onDeleteClinicalStage?.(stage.id)}
-                        title="Delete"
-                      >
-                        <span className="material-symbols-outlined">delete</span>
-                      </button>
-                    </div>
-                  </td>
+        {clinicalStagesEnabled ? (
+          <div className="clinical-stages-section">
+            <div className="clinical-stages-header-row">
+              <div className="clinical-stages-header-content">
+                <h2 className="clinical-stages-title">Your Clinical Stages</h2>
+              </div>
+              <button type="button" className="btn-new-template btn-new-stage" onClick={openCreateStageDrawer}>
+                <span className="material-symbols-outlined btn-new-icon">add</span>
+                Add Stage
+              </button>
+            </div>
+
+            <table className="templates-table clinical-stages-table">
+              <thead>
+                <tr>
+                  <th className="col-name">Stage</th>
+                  <th className="col-evaluative">Evaluative?</th>
+                  <th className="col-actions" />
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              </thead>
+              <tbody>
+                {(clinicalStageCatalog || []).length === 0 ? (
+                  <tr>
+                    <td colSpan={3} className="empty-state-cell">
+                      No clinical stages yet. Create one using &quot;Add Stage&quot;.
+                    </td>
+                  </tr>
+                ) : (
+                  (clinicalStageCatalog || []).map((stage) => (
+                    <tr key={stage.id}>
+                      <td className="col-name">{stage.name}</td>
+                      <td className="col-evaluative">{stage.evaluative ? 'Yes' : 'No'}</td>
+                      <td className="col-actions">
+                        <div className="row-actions">
+                          <button
+                            type="button"
+                            className="action-btn"
+                            onClick={() => onDeleteClinicalStage?.(stage.id)}
+                            title="Delete"
+                          >
+                            <span className="material-symbols-outlined">delete</span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="clinical-stages-disabled-hint">
+            Clinical stages are disabled. Templates will have a single configuration (no stage-specific versions).
+          </div>
+        )}
       </div>
 
       <div className="templates-table-wrapper">

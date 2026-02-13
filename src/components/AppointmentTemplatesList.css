@@ -182,6 +182,90 @@
   border: none;
 }
 
+.clinical-stages-block {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.clinical-stages-settings-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.clinical-stages-settings-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.clinical-stages-settings-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.clinical-stages-settings-description {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #666;
+  line-height: 1.5;
+  max-width: 700px;
+}
+
+.clinical-stages-toggle {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  padding: 2px;
+  flex-shrink: 0;
+}
+
+.clinical-stages-toggle.on {
+  background-color: #1132EE;
+}
+
+.clinical-stages-toggle.on:hover {
+  background-color: #3D5DFF;
+}
+
+.clinical-stages-toggle.on:active {
+  background-color: #0E2BD4;
+}
+
+.clinical-stages-toggle.off {
+  background-color: #d0d0d0;
+}
+
+.clinical-stages-toggle-slider {
+  display: block;
+  width: 20px;
+  height: 20px;
+  background-color: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+
+.clinical-stages-toggle.on .clinical-stages-toggle-slider {
+  transform: translateX(20px);
+}
+
+.clinical-stages-toggle.off .clinical-stages-toggle-slider {
+  transform: translateX(0);
+}
+
+.clinical-stages-disabled-hint {
+  font-size: 13px;
+  color: #666;
+  line-height: 1.5;
+}
+
 .templates-table {
   width: 100%;
   border-collapse: separate;
